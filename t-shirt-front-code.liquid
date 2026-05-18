@@ -1,0 +1,129 @@
+{% comment %} {% layout none %} {% endcomment %}
+<div class="shirt-product">
+  <div>
+    <iframe
+      src="https://t-shirt-viewer-react.vercel.app"
+      width="100%"
+      height="100%"
+      style="border: none; height:100vh;"
+      allowfullscreen
+    ></iframe>
+  </div>
+</div>
+<script>
+  window.addEventListener("message", async function (event) {
+    // --- Security Check ---
+    if (event.origin !== "https://t-shirt-viewer-react.vercel.app") {
+      console.warn("⚠️ Untrusted origin:", event.origin);
+      return;
+    }
+    const data = event.data;
+
+    // --- Handle Custom T-Shirt Creation and Add to Cart Event ---
+    if (data?.type === "ADD_CUSTOM_SHIRT_TO_CART" && data.payload) {
+      const customization = data.payload;
+
+      try {
+        let imageUrl = null;
+        
+        // Step 1: Upload image to Shopify Media API first
+        if (customization.image) {
+          console.log("🖼️ Uploading image to Shopify Media...");
+          const imageResponse = await fetch("https://playmaker-project-server.vercel.app/api/products/upload-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: customization.image }),
+          });
+
+          const imageData = await imageResponse.json();
+          
+          if (imageResponse.ok) {
+            imageUrl = imageData.imageUrl;
+            console.log("✅ Image uploaded successfully:", imageUrl);
+          } else {
+            console.warn("⚠️ Image upload failed:", imageData);
+          }
+        }
+
+        // Step 2: Create product with image URL
+        const productData = {
+          product: {
+            title: customization.title || "Custom T-Shirt",
+            body_html: customization.description || "Customized T-Shirt product",
+            vendor: "Custom Vendor",
+            product_type: "T-Shirt",
+            variants: [
+              {
+                option1: "Default",
+                price: customization.price || "49.99",
+                // Pass customization details as variant properties
+                properties: customization.customization_details || {}
+              },
+            ],
+            // Use uploaded image URL
+            images: imageUrl
+              ? [
+                  {
+                    src: imageUrl
+                  }
+                ]
+              : [],
+          },
+        };
+
+        console.log("🛍️ Creating product with image:", productData);
+
+        // --- Backend Call: Create Product ---
+        const response = await fetch("https://playmaker-project-server.vercel.app/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productData),
+        });
+
+        const created = await response.json();
+
+        if (!response.ok) {
+          throw new Error(created.error || "Failed to create product");
+        }
+
+        console.log("✅ Product created in Shopify:", created);
+
+        // --- Step 3: Add to Shopify cart ---
+        if (created?.variantId) {
+          await fetch("/cart/add.js", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: [{
+                id: created.variantId,
+                quantity: 1,
+                // Explicitly send customization details as line item properties
+                properties: customization.customization_details || {}
+              }],
+            }),
+          });
+          window.location.href = "/cart";
+          // Alert removed - no more popup
+        } else {
+          // Alert removed - no more popup
+        }
+      } catch (err) {
+        console.error("❌ Error:", err);
+        // Alert removed - no more popup
+      }
+    }
+  });
+</script>
+
+{{ 'shirt3d.css' | asset_url | stylesheet_tag }}
+
+<style>
+  
+sticky-header {
+    display:none !important;
+}
+#MainContent {
+background-image: url({{ settings.tshirt_banner | img_url: 'master' }});
+    background-size: 100% 100%;
+    background-repeat: no-repeat;}
+</style>
