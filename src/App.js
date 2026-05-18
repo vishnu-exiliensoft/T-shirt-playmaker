@@ -767,8 +767,8 @@ function StudioLights() {
     const keyLight = new DirectionalLight(0xffffff, 3.5);
     keyLight.position.set(5, 5, 7);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = 1024;
-    keyLight.shadow.mapSize.height = 1024;
+    keyLight.shadow.mapSize.width = 4096;
+    keyLight.shadow.mapSize.height = 4096;
     keyLight.shadow.camera.near = 0.5;
     keyLight.shadow.camera.far = 50;
     keyLight.shadow.bias = -0.0002;
@@ -777,10 +777,8 @@ function StudioLights() {
     const fillLight = new DirectionalLight(0xffffff, 1.2);
     fillLight.position.set(-5, 5, 5);
     fillLight.castShadow = true;
-    // fillLight.shadow.mapSize.width = 2048;
-    // fillLight.shadow.height = 2048;
-    fillLight.shadow.mapSize.width = 1024;
-    fillLight.shadow.mapSize.height = 1024;
+    fillLight.shadow.mapSize.width = 2048;
+    fillLight.shadow.height = 2048;
     fillLight.shadow.bias = -0.0005;
     fillLight.shadow.camera.far = 8;
     fillLight.shadow.normalBias = 0.05;
@@ -1716,7 +1714,7 @@ export default function App() {
             shadows
             className="main-canvas"
             camera={{ position: [0, 14, 2], fov: 42 }}
-            dpr={[1, 1.25]}
+            dpr={[1.5, 2]}
             gl={{
               antialias: true,
               powerPreference: "high-performance",
@@ -1733,7 +1731,7 @@ export default function App() {
             }}
           >
             <StudioLights />
-            <SoftShadows size={6} samples={4} focus={0} flat={false} />
+            <SoftShadows size={10} samples={20} focus={0} flat={false} />
             {/* Backup: repeatScale was dynamic -> repeatScale={parseFloat(selectedFabric.textureRepeat)} */}
             <ShirtModel
               fabricTextureUrl={selectedFabric?.imageUrl}
@@ -1879,7 +1877,7 @@ export default function App() {
                 Reset All
               </button>
             </div>
-            <p>Order Today, Receive in 2 weeks.</p>
+            <p className="delivery-note">Order Today, Receive in 2 weeks.</p>
           </div>
           <button
                 className="view-toggle-btn"
